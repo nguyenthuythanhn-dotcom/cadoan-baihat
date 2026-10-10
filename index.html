@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thư Viện Bài Hát Ca Đoàn</title>
+    <style>
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #fcfbfa; /* Nền trang web màu be sữa rất nhẹ nhàng */
+        color: #4a3b32; /* Màu chữ nâu đậm, dịu mắt hơn màu đen thuần */
+        margin: 0;
+        padding: 20px;
+    }.hidden {
+    display: none !important;
+}
+    .container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: #ffffff;
+        padding: 25px;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(92, 77, 63, 0.08); /* Đổ bóng sắc nâu nhẹ */
+        border: 1px solid #f0eae1;
+    }
+    h1 {
+        color: #5c4d3f; /* Tiêu đề màu nâu cà phê */
+        text-align: center;
+        font-weight: 700;
+    }
+    /* Các ô danh mục (Trang chủ) */
+    .grid-menu {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        gap: 12px;
+        margin-top: 20px;
+    }
+    .category-btn {
+        background-color: #f7f3ec; /* Nền nút màu be ấm */
+        color: #5c4d3f; /* Chữ màu nâu */
+        border: 1px solid #e3d7c8;
+        padding: 15px;
+        border-radius: 12px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-align: center;
+    }
+    .category-btn:hover {
+        background-color: #5c4d3f; /* Khi di chuột vào đổi sang màu nâu đậm */
+        color: #ffffff; /* Chữ chuyển thành màu trắng */
+        border-color: #5c4d3f;
+    }
+    /* Danh sách bài hát / xấp / tờ */
+    .list-group {
+        list-style: none;
+        padding: 0;
+        margin-top: 15px;
+    }
+    .list-item {
+        background: #fbf8f5;
+        border: 1px solid #f0eae1;
+        padding: 14px 18px;
+        margin-bottom: 10px;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-weight: 500;
+        color: #4a3b32;
+    }
+    .list-item:hover {
+        background-color: #f2ebe1;
+        border-color: #d9cca8;
+        transform: translateX(3px);
+    }
+    /* Nút Quay lại */
+    .btn-back {
+        background-color: #e8ded1;
+        color: #5c4d3f;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        margin-bottom: 15px;
+        transition: background 0.2s;
+    }
+    .btn-back:hover {
+        background-color: #d9cca8;
+    }
+    .hidden {
+        display: none !important;
+    }
+    .song-detail {
+        margin-top: 15px;
+        line-height: 1.6;
+    }
+</style>
+</head>
+<body>
+
+    <div class="container">
+<h1 style="margin-bottom: 25px; line-height: 1.3;">
+    🎵 Quản Lý Bài Hát<br>
+    <span style="font-size: 18px; font-weight: normal; color: #7f8c8d; display: block; margin-top: 5px;">- Ca đoàn Thiên Thần -</span>
+</h1>
+        <!-- MÀN HÌNH 1: TRANG CHỦ -->
+        <div id="view-home">
+            <!-- Ô TÌM KIẾM BÀI HÁT -->
+    <div style="margin: 20px 0; text-align: center;">
+        <input type="text" id="search-input" placeholder="🔍 Nhập tên bài hát hoặc tác giả để tìm..." oninput="handleSearch(this.value)" style="width: 100%; max-width: 500px; padding: 12px 18px; border: 2px solid #ddd; border-radius: 25px; font-size: 15px; outline: none; transition: border-color 0.3s; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+    </div>
+    
+    <!-- Danh sách kết quả tìm kiếm -->
+    <div id="search-results-container" class="hidden" style="margin-bottom: 20px;">
+        <h3 style="color: #2c3e50; font-size: 18px; margin-bottom: 10px;">Kết quả tìm kiếm:</h3>
+        <ul class="list-group" id="search-results-list"></ul>
+    </div>
+            <p style="text-align: center; color: #7f8c8d; margin-bottom: 20px;">Vui lòng chọn mục phụng vụ bên dưới:</p>
+            <div id="loading-status" class="loading">⏳ Đang lấy dữ liệu từ Google Sheets...</div>
+            <div class="grid-menu" id="category-grid"></div>
+        </div>
+
+        <!-- MÀN HÌNH 2: XẤP GIẤY -->
+        <div id="view-bundles" class="hidden">
+            <button class="btn-back" onclick="goHome()">↩ Quay lại Trang Chủ</button>
+            <h3 id="bundle-title-header" style="color: #2c3e50;">Danh sách xấp giấy</h3>
+            <ul class="list-group" id="bundle-list"></ul>
+        </div>
+
+        <!-- MÀN HÌNH 3: DANH SÁCH TỜ -->
+        <div id="view-pages" class="hidden">
+            <button class="btn-back" onclick="goBackToBundles()">⬅ Quay lại danh sách xấp</button>
+            <h3 id="page-list-header" style="color: #2c3e50;">Danh sách tờ</h3>
+            <ul class="list-group" id="page-list"></ul>
+        </div>
+
+        <!-- MÀN HÌNH 4: BÀI HÁT -->
+        <div id="view-songs" class="hidden">
+            <button class="btn-back" onclick="goBackToPages()">⬅ Quay lại danh sách tờ</button>
+            <h3 id="song-list-header" style="color: #2c3e50;">Danh sách bài hát</h3>
+            <ul class="list-group" id="song-list"></ul>
+        </div>
+
+        <!-- MÀN HÌNH 5: CHI TIẾT BÀI HÁT -->
+        <div id="view-detail" class="hidden">
+            <button class="btn-back" onclick="goBackToSongs()">⬅ Quay lại danh sách bài hát</button>
+            <div class="song-detail" id="song-detail-content"></div>
+        </div>
+        </div>
+
+    <script>
+        // Danh sách các mục đã được viết hoa toàn bộ chuẩn xác
+        const categories = [
+            "NHẬP LỄ", "ĐÁP CA", "DÂNG LỄ", "HIỆP LỄ", "ĐỨC MẸ", 
+            "MÙA VỌNG", "GIÁNG SINH", "MÙA CHAY", "PHỤC SINH", "LỄ VỀ CHÚA", 
+            "THÁNH THỂ", "THÁNH THẦN", "CÁC THÁNH", "TẬN HIẾN TRUYỀN GIÁO", 
+            "HÔN PHỐI", "CẦU HỒN", "XUÂN", "CHUNG", "BỔN MẠNG"
+        ];
+
+        let database = {};
+        let currentCategory = "";
+        let currentBundle = "";
+        let currentPage = "";
+
+        function getCellValue(c, index) {
+            if (!c || !c[index] || c[index].v === null || c[index].v === undefined) return "";
+            return String(c[index].v).trim();
+        }
+
+        function handleSheetData(data) {
+    try {
+        if (!data || !data.table || !data.table.rows) {
+            throw new Error("Dữ liệu không đúng định dạng");
+        }
+
+        const rows = data.table.rows;
+        database = {};
+
+        rows.forEach(row => {
+            const c = row.c;
+            if (!c) return;
+
+            // Đọc đúng thứ tự cột trong Google Sheet của bạn:
+            // 0: MỤC, 1: XẤP, 2: TỜ, 3: TÊN BÀI, 4: TÁC GIẢ, 5: GHI CHÚ, 6: THÁNH VỊNH, 7: LINK YOUTUBE, 8: LINK ẢNH SHEET
+            const muc = getCellValue(c, 0);
+            const xapGiay = getCellValue(c, 1);
+            const toGiay = getCellValue(c, 2) || "Tờ 1"; // Cột C: Tờ
+            const tenBai = getCellValue(c, 3);          // Cột D: Tên bài
+            const tacGia = getCellValue(c, 4);          // Cột E: Tác giả
+            const ghiChu = getCellValue(c, 5);          // Cột F: Ghi chú
+            const thanhVinh = getCellValue(c, 6);       // Cột G: Thánh Vịnh
+            const linkYoutube = getCellValue(c, 7);     // Cột H: Link YouTube
+            const linkAnhSheet = getCellValue(c, 8);    // Cột I: Link Ảnh Sheet
+
+            if (!muc || !xapGiay || !tenBai) return;
+
+            const keyMuc = muc.toUpperCase();
+
+            if (!database[keyMuc]) database[keyMuc] = {};
+            if (!database[keyMuc][xapGiay]) database[keyMuc][xapGiay] = [];
+
+            database[keyMuc][xapGiay].push({
+                page: toGiay,     // Lưu giá trị Tờ để phân loại màn hình 3
+                title: tenBai,
+                author: tacGia,
+                note: ghiChu,
+                psalms: thanhVinh,
+                youtube: linkYoutube,
+                sheetImg: linkAnhSheet
+            });
+        });
+
+        // Sau khi tải dữ liệu xong, ẩn thông báo đang tải và hiển thị trang chủ
+        document.getElementById("loading-status").style.display = "none";
+        renderCategories();
+
+    } catch (error) {
+        console.error("Lỗi xử lý dữ liệu:", error);
+        document.getElementById("loading-status").innerHTML = "❌ Lỗi khi tải dữ liệu từ Google Sheet. Vui lòng kiểm tra lại!";
+    }
+}
+
+
+        function renderHome() {
+            const grid = document.getElementById("category-grid");
+            grid.innerHTML = "";
+            categories.forEach(cat => {
+                const card = document.createElement("div");
+                card.className = "menu-card";
+                card.innerHTML = `📁 ${cat}`;
+                card.onclick = () => openCategory(cat);
+                grid.appendChild(card);
+            });
+        }
+
+        function openCategory(catName) {
+            currentCategory = catName;
+            document.getElementById("view-pages").classList.add("hidden");
+            document.getElementById("view-songs").classList.add("hidden");
+            document.getElementById("view-detail").classList.add("hidden");
+            document.getElementById("view-home").classList.add("hidden");
+            document.getElementById("view-bundles").classList.remove("hidden");
+            document.getElementById("bundle-title-header").innerText = `Danh sách xấp giấy: ${catName}`;
+            
+            const bundleList = document.getElementById("bundle-list");
+            bundleList.innerHTML = "";
+
+            const keySearch = catName.toUpperCase();
+            const bundles = database[keySearch];
+
+            if (!bundles || Object.keys(bundles).length === 0) {
+                bundleList.innerHTML = "<li style='color: #7f8c8d; padding: 15px;'>Đang cập nhật xấp giấy cho mục này...</li>";
+                return;
+            }
+
+            for (let bundleName in bundles) {
+                const li = document.createElement("li");
+                li.className = "list-item";
+                li.innerHTML = `<span>📂 <strong>${bundleName}</strong></span> <span>▶</span>`;
+                li.onclick = () => openBundle(bundleName);
+                bundleList.appendChild(li);
+            }
+        }
+
+        function openBundle(bundleName) {
+    currentBundle = bundleName;
+    document.getElementById("view-home").classList.add("hidden");
+    document.getElementById("view-bundles").classList.add("hidden");
+    document.getElementById("view-pages").classList.remove("hidden");
+    document.getElementById("view-songs").classList.add("hidden");
+    document.getElementById("view-detail").classList.add("hidden");
+    document.getElementById("page-list-header").innerText = `Xấp: ${bundleName} - Chọn Tờ`;
+
+    const pageList = document.getElementById("page-list");
+    pageList.innerHTML = "";
+
+    const keySearch = currentCategory.toUpperCase();
+    const bundleData = database[keySearch][currentBundle];
+
+    // Lấy danh sách các Tờ duy nhất
+    const pages = [...new Set(bundleData.map(song => song.page || song.to || "Tờ 1"))];
+
+    pages.forEach(pageName => {
+        const li = document.createElement("li");
+        li.className = "list-item";
+        li.innerHTML = `<span>📄 <strong>${pageName}</strong></span>`;
+        li.onclick = () => openPage(pageName);
+        pageList.appendChild(li);
+    });
+}
+
+function openPage(pageName) {
+    currentPage = pageName;
+    document.getElementById("view-home").classList.add("hidden");
+    document.getElementById("view-bundles").classList.add("hidden");
+    document.getElementById("view-pages").classList.add("hidden");
+    document.getElementById("view-songs").classList.remove("hidden");
+    document.getElementById("view-detail").classList.add("hidden");
+    document.getElementById("song-list-header").innerText = `${currentBundle} - ${pageName}`;
+
+    const songList = document.getElementById("song-list");
+    songList.innerHTML = "";
+
+    const keySearch = currentCategory.toUpperCase();
+    const songsInBundle = database[keySearch][currentBundle];
+    
+    // Lọc bài hát theo Tờ
+    const songsInPage = songsInBundle.filter(song => (song.page || song.to || "Tờ 1") === pageName);
+
+    songsInPage.forEach((song) => {
+        const li = document.createElement("li");
+        li.className = "list-item";
+        li.innerHTML = `<span>🎵 <strong>${song.title}</strong> ${song.author ? `<small>(${song.author})</small>` : ''}</span>`;
+        
+        const realIndex = songsInBundle.findIndex(s => s === song);
+        li.onclick = () => openSongDetail(realIndex);
+        songList.appendChild(li);
+    });
+}
+
+function goBackToBundles() {
+    document.getElementById("view-home").classList.add("hidden");
+    document.getElementById("view-pages").classList.add("hidden");
+    document.getElementById("view-songs").classList.add("hidden");
+    document.getElementById("view-detail").classList.add("hidden");
+    document.getElementById("view-bundles").classList.remove("hidden");
+}
+
+function goBackToPages() {
+    document.getElementById("view-home").classList.add("hidden");
+    document.getElementById("view-bundles").classList.add("hidden");
+    document.getElementById("view-songs").classList.add("hidden");
+    document.getElementById("view-detail").classList.add("hidden");
+    document.getElementById("view-pages").classList.remove("hidden");
+}
+
+function goBackToSongs() {
+    document.getElementById("view-home").classList.add("hidden");
+    document.getElementById("view-bundles").classList.add("hidden");
+    document.getElementById("view-pages").classList.add("hidden");
+    document.getElementById("view-detail").classList.add("hidden");
+    document.getElementById("view-songs").classList.remove("hidden");
+}
+
+        function getDirectImageUrl(url) {
+    if (!url) return '';
+    if (url.includes('drive.google.com') && url.includes('/d/')) {
+        const fileId = url.split('/d/')[1].split('/')[0];
+        return `https://drive.google.com/uc?export=view&id=${fileId}`;
+    }
+    return url;
+}
+
+function getYouTubeEmbedUrl(url) {
+    if (!url) return '';
+    let videoId = '';
+    if (url.includes('youtu.be/')) {
+        videoId = url.split('youtu.be/')[1].split('?')[0];
+    } else if (url.includes('youtube.com/watch')) {
+        const urlParams = new URLSearchParams(url.split('?')[1]);
+        videoId = urlParams.get('v');
+    }
+    return videoId ? `https://www.youtube.com/embed/${videoId}` : '';
+}
+
+function openSongDetail(index) {
+    document.getElementById("view-home").classList.add("hidden");
+    document.getElementById("view-bundles").classList.add("hidden");
+    document.getElementById("view-pages").classList.add("hidden");
+    document.getElementById("view-songs").classList.add("hidden");
+    document.getElementById("view-detail").classList.remove("hidden");
+
+    const keySearch = currentCategory.toUpperCase();
+    const song = database[keySearch][currentBundle][index];
+    const detailContainer = document.getElementById("song-detail-content");
+
+    let psalmsHTML = song.psalms ? `<div class="song-info"><strong>Thánh Vịnh:</strong> ${song.psalms}</div>` : '';
+    
+    // Xử lý nhúng Video YouTube
+    const ytEmbedUrl = getYouTubeEmbedUrl(song.youtube);
+    let youtubeHTML = '';
+    if (ytEmbedUrl) {
+        youtubeHTML = `
+            <div style="margin: 15px 0; position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 10px;">
+                <iframe src="${ytEmbedUrl}" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;" allowfullscreen></iframe>
+            </div>`;
+    } else if (song.youtube) {
+        youtubeHTML = `<div class="song-info"><strong>Đường link Youtube:</strong> <a href="${song.youtube}" target="_blank">Xem video</a></div>`;
+    }
+
+    // Xử lý hiển thị Ảnh Sheet Nhạc trực tiếp
+    const rawSheetUrl = song.sheetImg || song.sheet || '';
+    const directImgUrl = getDirectImageUrl(rawSheetUrl);
+    let imgHTML = '';
+
+    if (directImgUrl) {
+        imgHTML = `
+            <div style="margin-top: 20px; text-align: center;">
+                <strong style="display: block; margin-bottom: 10px; color: #2c3e50;">🎼 Sheet Nhạc:</strong>
+                <img src="${directImgUrl}" alt="Sheet nhạc" style="max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); border: 1px solid #ddd;" onerror="this.style.display='none'; document.getElementById('fallback-sheet-link').style.display='block';">
+                <p id="fallback-sheet-link" style="display:none; margin-top: 10px;">
+                    <a href="${rawSheetUrl}" target="_blank" style="color: #3498db; text-decoration: underline;">👉 Bấm vào đây để mở Sheet nhạc</a>
+                </p>
+            </div>`;
+    } else {
+        imgHTML = `<div class="song-info" style="margin-top: 15px; text-align: center; color: #7f8c8d;">Chưa có ảnh sheet nhạc cho bài này.</div>`;
+    }
+
+    detailContainer.innerHTML = `
+        <h2 style="color: #2c3e50; text-align: center; margin-bottom: 10px;">${song.title}</h2>
+        <div class="song-info" style="text-align: center; margin-bottom: 15px;"><strong>Tác giả:</strong> ${song.author || 'Chưa cập nhật'}</div>
+        ${psalmsHTML}
+        ${youtubeHTML}
+        ${imgHTML}
+    `;
+}
+        
+
+        function goHome() {
+            document.getElementById("view-bundles").classList.add("hidden");
+            document.getElementById("view-home").classList.remove("hidden");
+            document.getElementById("view-pages").classList.add("hidden");
+            document.getElementById("view-songs").classList.add("hidden");
+            document.getElementById("view-detail").classList.add("hidden");
+}
+
+        function goBackToBundles() {
+            document.getElementById("view-home").classList.add("hidden");
+            document.getElementById("view-songs").classList.add("hidden");
+            document.getElementById("view-pages").classList.add("hidden");
+            document.getElementById("view-bundles").classList.remove("hidden");
+            document.getElementById("view-detail").classList.add("hidden");
+        }
+function handleSearch(keyword) {
+    const resultsContainer = document.getElementById("search-results-container");
+    const resultsList = document.getElementById("search-results-list");
+    const categoryGrid = document.getElementById("category-grid");
+    
+    const query = keyword.toLowerCase().trim();
+    
+    if (!query) {
+        resultsContainer.classList.add("hidden");
+        if (categoryGrid) categoryGrid.style.display = "grid";
+        return;
+    }
+
+    if (categoryGrid) categoryGrid.style.display = "none";
+    resultsContainer.classList.remove("hidden");
+    resultsList.innerHTML = "";
+
+    let foundSongs = [];
+
+    for (let cat in database) {
+        for (let bundle in database[cat]) {
+            const songs = database[cat][bundle];
+            songs.forEach((song, index) => {
+                const title = (song.title || "").toLowerCase();
+                const author = (song.author || "").toLowerCase();
+                if (title.includes(query) || author.includes(query)) {
+                    foundSongs.push({
+                        cat: cat,
+                        bundle: bundle,
+                        song: song,
+                        index: index
+                    });
+                }
+            });
+        }
+    }
+
+    if (foundSongs.length === 0) {
+        resultsList.innerHTML = `<li class="list-item" style="text-align: center; color: #7f8c8d;">Không tìm thấy bài hát nào phù hợp.</li>`;
+        return;
+    }
+
+    foundSongs.forEach(item => {
+        const li = document.createElement("li");
+        li.className = "list-item";
+        li.innerHTML = `<span>🎵 <strong>${item.song.title}</strong> <small style="color: #7f8c8d; display: block; margin-top: 3px;">📂 ${item.cat} › ${item.bundle}${item.song.author ? ' › ' + item.song.author : ''}</small></span>`;
+        
+        li.onclick = () => {
+            currentCategory = item.cat;
+            currentBundle = item.bundle;
+            openSongDetail(item.index);
+        };
+        resultsList.appendChild(li);
+    });
+}
+        function goBackToSongs() {
+            document.getElementById("view-detail").classList.add("hidden");
+            document.getElementById("view-songs").classList.remove("hidden");
+        }
+    </script>
+<<script>
+    async function loadSheetData() {
+        try {
+            const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSlgfg-sVg0GfLElVrcQCDxdX1HGUj0fkhSq_7Q6IV2EpPSSgFnTkiFUBo0MbQ7eRjRTpWGvto_Jj_y/pub?output=csv";
+            const response = await fetch(csvUrl);
+            const dataText = await response.text();
+            
+            const rows = dataText.split("\n").map(row => {
+                return row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+            });
+
+            database = {};
+
+            rows.forEach((cols, index) => {
+                if (index === 0) return; // Bỏ qua tiêu đề
+                if (cols.length < 9) return;
+
+                const clean = (val) => val ? val.replace(/^"|"$/g, '').trim() : "";
+
+                const muc = clean(cols[0]);
+                const xap = clean(cols[1]) || "NL1";
+                const to = clean(cols[2]) || "1";
+                const tenbai = clean(cols[3]);
+                const tacgia = clean(cols[4]);
+                const ghichu = clean(cols[5]);
+                const thanhvinh = clean(cols[6]);
+                const youtube = clean(cols[7]);
+                const anhsheet = clean(cols[8]);
+
+                if (!muc || !tenbai) return;
+
+                // Giữ nguyên dạng chữ của Sheet (ví dụ: NHẬP LỄ, NL1) để khớp hoàn toàn với giao diện
+                if (!database[muc]) {
+                    database[muc] = {};
+                }
+                if (!database[muc][xap]) {
+                    database[muc][xap] = [];
+                }
+
+                database[muc][xap].push({
+                    page: to,
+                    title: tenbai,
+                    author: tacgia,
+                    note: ghichu,
+                    psalms: thanhvinh,
+                    youtube: youtube,
+                    sheetImg: anhsheet
+                });
+            });
+
+            const loadingStatus = document.getElementById("loading-status");
+            if (loadingStatus) loadingStatus.style.display = "none";
+            
+            if (typeof renderHome === 'function') {
+                renderHome();
+            }
+
+        } catch (error) {
+            console.error("Lỗi tải dữ liệu:", error);
+            const loadingStatus = document.getElementById("loading-status");
+            if (loadingStatus) {
+                loadingStatus.innerHTML = "❌ Không thể tải dữ liệu từ Google Sheets. Vui lòng kiểm tra lại!";
+            }
+        }
+    }
+
+    window.addEventListener("DOMContentLoaded", loadSheetData);
+</script>
