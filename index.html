@@ -396,26 +396,37 @@ function openSongDetail(index) {
         const rawSheetUrl = song.sheetImg || song.sheet || '';
         let imgHTML = '';
 
-        if (rawSheetUrl) {
-            // Tách các link cách nhau bằng khoảng trắng hoặc dấu phẩy
-            const sheetLinks = rawSheetUrl.trim().split(/[\s,]+/);
+    if (rawSheetUrl) {
+        // Tách các link cách nhau bằng khoảng trắng hoặc dấu phẩy
+        const sheetLinks = rawSheetUrl.trim().split(/[\s,]+/);
 
-            const imagesMarkup = sheetLinks.map(link => {
-                const directImgUrl = getDirectImageUrl(link);
+        const imagesMarkup = sheetLinks.map(link => {
+            // Kiểm tra nếu link là file PDF
+            if (link.toLowerCase().endsWith('.pdf')) {
                 return `
-                    <img src="${directImgUrl}" alt="Sheet nhạc" style="max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin-bottom: 15px; display: block; margin-left: auto; margin-right: auto;">
+                    <div style="margin-bottom: 20px; padding: 20px; background: #f8f9fa; border-radius: 8px; text-align: center; border: 1px solid #e9ecef; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                        <p style="margin-bottom: 12px; color: #2c3e50; font-weight: 500;">📄 Tài liệu Sheet Nhạc (PDF)</p>
+                        <a href="${link}" target="_blank" rel="noreferrer" style="display: inline-block; padding: 10px 20px; background: #2c3e50; color: white; text-decoration: none; border-radius: 6px; font-weight: 500;">Mở file PDF ↗</a>
+                    </div>
                 `;
-            }).join('');
-
-            imgHTML = `
-                <div style="margin-top: 20px; text-align: center;">
-                    <strong style="display: block; margin-bottom: 10px; color: #2c3e50;">🎼 Sheet Nhạc:</strong>
-                    ${imagesMarkup}
-                </div>
+            }
+            
+            // Nếu là ảnh thông thường (.jpg, .png...)
+            const directImgUrl = getDirectImageUrl(link);
+            return `
+                <img src="${directImgUrl}" alt="Sheet nhạc" style="max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-bottom: 15px;">
             `;
-        } else {
-            imgHTML = `<div class="song-info" style="margin-top: 15px; text-align: center; color: #7f8c8d;">Chưa có ảnh sheet nhạc cho bài này.</div>`;
-        }
+        }).join('');
+
+        imgHTML = `
+            <div style="margin-top: 20px; text-align: center;">
+                <strong style="display: block; margin-bottom: 10px; color: #2c3e50;">Sheet Nhạc:</strong>
+                ${imagesMarkup}
+            </div>
+        `;
+    } else {
+        imgHTML = `<div class="song-info" style="margin-top: 15px; text-align: center; color: #7f8c8d;">Chưa có ảnh sheet nhạc cho bài này</div>`;
+    }
 
     detailContainer.innerHTML = `
         <h2 style="color: #2c3e50; text-align: center; margin-bottom: 10px;">${song.title}</h2>
